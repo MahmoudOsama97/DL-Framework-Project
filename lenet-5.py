@@ -29,7 +29,7 @@ FC6=Dense(flat.size(),84, activation=’tanh’)
 #model.add(layers.Dense(10, activation=’softmax’))
 FC6=Dense(84,10, activation=’softmax’)
 # Compile the model
-list m=[C1,p2]
+list m=[C1,S2,C3,S4,C5]
 model.optimize()
 
 
