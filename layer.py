@@ -36,11 +36,16 @@ class Dense():
     def backward(self,grad_output,input):
         # compute d f / d x = d f / d dense * d dense / d x
         # where d dense/ d x = weights transposed
-        grad_input = np.dot(grad_output, self.weights.T)
+        grad_input = np.dot(self.weights,grad_output)
         
         # compute gradient w.r.t. weights and biases
-        grad_weights = grad_output
-        grad_biases = grad_output.mean(axis=0)*input.shape[0]
+        grad_weights=np.zeros((len(grad_output),len(input)))
+        for i in range(len(grad_output)):
+          grad_weights[i] =  grad_output[i]*input
+        grad_biases = grad_output
+        grad_weights=grad_weights.T
+
+
         assert grad_weights.shape == self.weights.shape and grad_biases.shape == self.biases.shape
 
         # Here we perform a stochastic gradient descent step. 
@@ -60,7 +65,7 @@ class Conv():
         self.W=np.random.random(size=(kernel_size,kernel_size,n_prev,filters))
         self.b=np.zeros(shape=(1,filters))
         self.stride=strides
-        
+        self.learning_rate=learning_rate
         if padding== "valid":
             self.pad=0
         elif padding=="same" : #find equation 
@@ -91,7 +96,7 @@ class Conv():
         return s
     def sigmoid_derivative(self,x):
 
-        s = sigmoid(x)
+        s = self.sigmoid(x)
         ds = s*(1-s)
      
         
@@ -99,7 +104,7 @@ class Conv():
 
     def tanh_derivative(self,x):
 
-        t = tanh(x)
+        t = self.tanh(x)
         dt = 1-np.power(t,2)
      
         return dt
@@ -119,12 +124,11 @@ class Conv():
 
     def derivative(self,x):
         if self.activation=="relu":
-            self.relu_derivative(x)
+          return  self.relu_derivative(x)
         if self.activation=="tanh":
-            self.tanh_derivative(x)    
+           return self.tanh_derivative(x)    
         if self.activation=="sigmoid":
-            self.sigmoid_derivative(x)
-
+           return self.sigmoid_derivative(x)
 
 
     def conv_single_step(self,a_slice_prev, W, b):
@@ -192,8 +196,8 @@ class Conv():
     def backward(self,dA, A_prev):
 
     
-
-        dZ=dA*self.derivative(Z)
+       
+        dZ=dA*self.derivative(self.D)
         # Retrieve information from "cache"
         #(A_prev, W, b, hparameters) = cache
         
@@ -218,8 +222,8 @@ class Conv():
         db = np.zeros((1, 1, 1, n_C))
 
         # Pad A_prev and dA_prev
-        A_prev_pad = self.zero_pad(A_prev, pad)
-        dA_prev_pad = self.zero_pad(dA_prev, pad)
+        A_prev_pad = self.zero_pad(A_prev)
+        dA_prev_pad = self.zero_pad(dA_prev)
         
     #for i in range(m):                       # loop over the training examples
         
@@ -253,7 +257,7 @@ class Conv():
                     
       
         #dA_prev[i, :, :, :] = da_prev_pad[pad:-pad, pad:-pad, :]
-        dA_prev.shape =da_prev_pad[pad:-pad, pad:-pad, :]
+        dA_prev=da_prev_pad[self.pad:-self.pad, self.pad:-self.pad, :]
         assert(dA_prev.shape == (n_H_prev, n_W_prev, n_C_prev))
     
 
@@ -380,12 +384,12 @@ class Pool():
                 for c in range(n_C):           # loop over the channels (depth)
                     # Find the corners of the current "slice" (≈4 lines)
                     vert_start = h
-                    vert_end = vert_start + f
+                    vert_end = vert_start + self.f
                     horiz_start = w
-                    horiz_end = horiz_start + f
+                    horiz_end = horiz_start + self.f
                     
                     # Compute the backward propagation in both modes.
-                    if mode == "max":
+                    if self.mode == "max":
                         # Use the corners and "c" to define the current slice from a_prev (≈1 line)
                         a_prev_slice = a_prev[vert_start:vert_end, horiz_start:horiz_end, c]
                         # Create the mask from a_prev_slice (≈1 line)
@@ -406,7 +410,7 @@ class Pool():
         
         assert(dA_prev.shape == A_prev.shape)
         
-        return dA_pre
+        return dA_prev
 
 
 
@@ -447,13 +451,13 @@ class model():
             Note that y is not one-hot encoded vector. 
             It can be computed as y.argmax(axis=1) from one-hot encoded vectors of labels if required.
         """
-        delta = np.zeros((len(pred), len(inp)))
+        delta = np.zeros(len(pred))
         for i in range(len(pred)):
           if i == label:
-            delta[i] = -(1 - pred[label])*inp
+            delta[i] = -(1 - pred[label])
           else:
-            delta[i] = pred[i]*inp
-        return delta.T
+            delta[i] = pred[i]
+        return delta
 
 
 
@@ -498,14 +502,12 @@ for i in range(0,10):
   poolout= S2.forward(conout)
   poolflat=poolout.flatten()
   denseout =FC6.forward(poolflat)
-  print(denseout.shape)
-  grad=mod.delta_cross_entropy(poolflat,denseout,train_labels[i])
+  grad+=mod.delta_cross_entropy(poolflat,denseout,train_labels[i])
+  #loss+=cross_entropy(denseout,train_labelsi)
 grad=grad/10
 print(grad.shape)
-print(graddense.shape)
-graddenseX=graddense.reshape(14,14,6)
 for i in range(0,10):
   graddense=FC6.backward(grad,poolflat)
-
+  graddense=graddense.reshape((14,14,6))
   gradpool= S2.backward(graddense,conout)
   X=C1.backward(gradpool,data)
