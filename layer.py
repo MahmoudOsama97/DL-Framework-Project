@@ -1,9 +1,16 @@
+# TensorFlow and tf.keras
+import tensorflow as tf
 
+# Helper libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+print(tf.__version__)
 
 class Dense():
 
     
-    def __init__(self, input_units,output_units,activation="ReLU" ,learning_rate=0.01):
+    def __init__(self, input_units,output_units,activation="ReLU" ,learning_rate=0.1):
         # A dense layer is a layer which performs a learned affine transformation:
         # f(x) = <W*x> + b
         self.activation=activation
@@ -165,7 +172,7 @@ class Conv():
         A_prev_pad = np.pad(A_prev,((self.pad,self.pad),(self.pad,self.pad),(0,0)), 'constant', constant_values = (0,0))
     #for i in range(m): 
         #a_prev_pad = A_prev_pad[i]                                # loop over the batch of training examples
-        a_prev_pad = A_prev_pad                     # Select ith training example's padded activation
+        a_prev_pad = A_prev_pad  
         for h in range(n_H):                           # loop over vertical axis of the output volume
             for w in range(n_W):                       # loop over horizontal axis of the output volume
                 for c in range(self.n_C):                   # loop over channels (= #filters) of the output volume
@@ -219,7 +226,7 @@ class Conv():
         dA_prev = np.zeros((n_H_prev, n_W_prev, n_C_prev))     
         #dA_prev = np.zeros((m, n_H_prev, n_W_prev, n_C_prev))                      
         dW = np.zeros((self.f, self.f, n_C_prev, n_C))
-        db = np.zeros((1, 1, 1, n_C))
+        db = np.zeros(( 1, n_C))
 
         # Pad A_prev and dA_prev
         A_prev_pad = self.zero_pad(A_prev)
@@ -246,21 +253,19 @@ class Conv():
                     
                     # Use the corners to define the slice from a_prev_pad
                     a_slice = a_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :]
-
                     # Update gradients for the window and the filter's parameters using the code formulas given above
                     #da_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :] += W[:,:,:,c] * dZ[i, h, w, c]
                     da_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :] += self.W[:,:,:,c] * dZ[h, w, c]
                     #dW[:,:,:,c] += a_slice * dZ[i, h, w, c]
                     #db[:,:,:,c] += dZ[i, h, w, c]
                     dW[:,:,:,c] += a_slice * dZ[h, w, c]
-                    db[:,:,:,c] += dZ[h, w, c]
+                    db[:,c] += dZ[h, w, c]
                     
       
         #dA_prev[i, :, :, :] = da_prev_pad[pad:-pad, pad:-pad, :]
         dA_prev=da_prev_pad[self.pad:-self.pad, self.pad:-self.pad, :]
         assert(dA_prev.shape == (n_H_prev, n_W_prev, n_C_prev))
     
-
         self.W=self.W-self.learning_rate*dW
         self.b=self.b-self.learning_rate*db
         return dA_prev
@@ -325,13 +330,6 @@ class Pool():
         assert(A.shape == (n_H, n_W, n_C))
         
         return A
-
-
-
-
-
-
-
 
 
     def create_mask_from_window(self ,x):
@@ -476,13 +474,12 @@ class model():
                 delta=model.arg[i].backward(delta)
 
 
-
-
-C1=Conv(filters=6,n_prev=1,kernel_size=5, strides=1, padding="same",activation="tanh")
+ 
+C1=Conv(filters=6,n_prev=1,kernel_size=5, strides=1, padding="same",activation="tanh",learning_rate=0.12)
 
 S2=Pool(pool_size=2,n_prev=6, strides=2, padding="valid", mode = "max")
 
-FC6=Dense(1176,10, activation="softmax")
+FC6=Dense(1176,10, activation="softmax",learning_rate=0.11)
 
 
 
@@ -492,22 +489,3 @@ FC6=Dense(1176,10, activation="softmax")
 
 
 
-
-grad=0
-print(train_labels.shape)
-mod=model(train_images,train_images)
-for i in range(0,10):
-  data=train_images[i].reshape((28,28,1))
-  conout=C1.forward(data)
-  poolout= S2.forward(conout)
-  poolflat=poolout.flatten()
-  denseout =FC6.forward(poolflat)
-  grad+=mod.delta_cross_entropy(poolflat,denseout,train_labels[i])
-  #loss+=cross_entropy(denseout,train_labelsi)
-grad=grad/10
-print(grad.shape)
-for i in range(0,10):
-  graddense=FC6.backward(grad,poolflat)
-  graddense=graddense.reshape((14,14,6))
-  gradpool= S2.backward(graddense,conout)
-  X=C1.backward(gradpool,data)
