@@ -47,5 +47,5 @@ The system should conform to all applicable local and international laws.
 ## Class Diagram:
 ![](Images/class.png)
 
-## Sequence Digram:
+## Sequence Diagram:
 ![](Images/seq.png)
