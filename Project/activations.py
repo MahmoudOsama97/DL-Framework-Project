@@ -1,52 +1,52 @@
-def sigmoid(z):
+class Activation:
+  def __init__(self,activation="relu"):
+    self.activation=activation
 
+  def sigmoid(self,z):
+      s = 1/(1+np.exp(-z))     
+      return s
+      
+  def tanh(self,z):
+      s = (np.exp(z)-np.exp(-z))/(np.exp(z)+np.exp(-z))    
+      return s
+      
+  def relu(self,x):
+      s = np.maximum(0,x)    
+      return s
 
-    s = 1/(1+np.exp(-z))
+  def sigmoid_derivative(self,x):
+      s = self.sigmoid(x)
+      ds = s*(1-s)
+      return ds
 
-    
-    return s
-    
-def tanh(z):
-    
+  def tanh_derivative(self,x):
+      t = self.tanh(x)
+      dt = 1-np.power(t,2)
+      return dt
+  
+  def relu_derivative(self,x):
+      return x>0     
 
-    s = (np.exp(z)-np.exp(-z))/(np.exp(z)+np.exp(-z))
-    
-    return s
-    
-def relu(x):
- 
-    s = np.maximum(0,x)
-    
-    return s
-    
-def sigmoid_derivative(x):
+  def softmax(self,x):
+      exps=np.exp(x)
+      return exps/np.sum(exps)
 
-    s = sigmoid(x)
-    ds = s*(1-s)
- 
-    
-    return ds
-
-def tanh_derivative(x):
-
-    t = tanh(x)
-    dt = 1-np.power(t,2)
- 
-     return dt
-     
-     
-
-    
-def softmax(x):
-
-
-    x_exp = np.exp(x)
-
-    x_sum = np.sum(x_exp, axis=1, keepdims=True)
- 
-    s = x_exp/x_sum
-
-  return s
-def softmax(X):
-    exps = np.exp(X)
-    return exps / np.sum(exps)
+  def DerivativeFn(self,x):
+      if self.activation=="relu":
+        return  self.relu_derivative(x)
+      elif self.activation=="tanh":
+          return self.tanh_derivative(x)    
+      elif self.activation=="sigmoid":
+          return self.sigmoid_derivative(x)
+      #elif self.activation=="softmax":
+          #return self.softmax_derivative(x)
+          
+  def ActivationFn(self,x):
+      if self.activation=="relu":
+          return self.relu(x)
+      elif self.activation=="tanh":
+          return np.tanh(x)    
+      elif self.activation=="sigmoid":
+          return self.sigmoid(x)
+      elif self.activation=="softmax":
+          return self.softmax(x) 
