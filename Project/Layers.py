@@ -11,7 +11,6 @@ class Layer:
     def backward(self, output_error, learning_rate):
         raise NotImplementedError
         
-        
 class Dense(Layer):
    
     def __init__(self, input_units,output_units,activation="relu" ,learning_rate=0.01):
@@ -52,8 +51,10 @@ class Dense(Layer):
         self.biases = self.biases - self.learning_rate * grad_biases
 
         return grad_input
+
+
 class Conv():
-    def __init__(self,filters=256,n_prev=3,kernel_size=11, strides=1, padding="valid",activation="tanh",learning_rate=0.01):
+    def __init__(self,filters=256,n_prev=3,kernel_size=11, strides=1, padding="valid",activation="tanh",learning_rate=0.0001):
  
         self.n_C=filters
         self.W = np.random.normal(loc=0.0,scale=1,size=(kernel_size,kernel_size,n_prev,filters))
@@ -72,16 +73,12 @@ class Conv():
     
       s = np.multiply(a_slice_prev, W) + b
       Z = np.sum(s)
- 
       return Z
- 
 
     def zero_pad(self,X):
  
         X_pad = np.pad(X, ((self.pad, self.pad), (self.pad,self.pad), (0, 0)), 'constant', constant_values=0)
-    
         return X_pad
- 
  
     def forward(self,A_prev):
 
@@ -111,13 +108,10 @@ class Conv():
                     # Convolve the (3D)11 slice with the correct filter W and bias b, to get back one output neuron. (≈1 line)
                     Z[ h, w, c] = self.conv_single_step(a_slice_prev, self.W[:,:,:,c], self.b[:,c])
         # Making sure your output shape is correct
-        assert(Z.shape == (n_H, n_W, self.n_C))
-        
+        assert(Z.shape == (n_H, n_W, self.n_C))  
         # Save information in "cache" for the backprop
-        
         self.D=Z
-        A=self.activationObject.ActivationFn(Z)
-        
+        A=self.activationObject.ActivationFn(Z)   
         return A
 
     def backward(self,dA, A_prev):
@@ -156,6 +150,7 @@ class Conv():
                     a_slice = a_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :]
                     # Update gradients for the window and the filter's parameters using the code formulas given above
                     da_prev_pad[vert_start:vert_end, horiz_start:horiz_end, :] += self.W[:,:,:,c] * dZ[h, w, c]
+                    #update each filter c with the gradient in the index h and w of the dZ as each filter parameter is now affected by the gradient of each element gradient in Z 
                     dW[:,:,:,c] += a_slice * dZ[h, w, c]
                     db[:,c] += dZ[h, w, c]
                     
@@ -169,6 +164,7 @@ class Conv():
         self.W=self.W-self.learning_rate*dW
         self.b=self.b-self.learning_rate*db
         return dA_prev
+
 class Pool(Layer):
     def __init__(self,pool_size=2,n_prev=3, strides=2, padding="valid", mode = "max"):
 
@@ -257,6 +253,7 @@ class Pool(Layer):
                         # Create the mask from a_prev_slice 
                         mask = self.create_mask_from_window(a_prev_slice)
                         # Set dA_prev to be dA_prev + (the mask multiplied by the correct entry of dA) 
+                        #update the element with the max value
                         dA_prev[ vert_start:vert_end, horiz_start:horiz_end, c] += np.multiply(mask, dA[ h, w, c])
                         
                     elif self.mode == "average":
@@ -269,4 +266,4 @@ class Pool(Layer):
         
         assert(dA_prev.shape == A_prev.shape)
         
-        return dA_prev
+        return dA_prev       
