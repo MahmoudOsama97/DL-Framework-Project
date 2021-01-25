@@ -1,14 +1,26 @@
 class Visualizer():
-    
+    '''
+    Class encapsulates the visualization method that plots the loss and required evaluation metrics against the epoch number.
+    Attributes:
+        losses: List of calculated scaler losses occured at each epoch.
+        accuracy: List of calculated scaler accuracies occured at each epoch.
+        f1score: List of calculated scaler f1scores occured at each epoch.
+        precision: List of calculated scaler precisions occured at each epoch.
+        recall: List of calculated scaler recalls occured at each epoch. 
+        mode: String represents the metric required to be visualized.
+        metric_mode: List of metric values according to the passed mode.
+    '''
     # This function is called when the training begins
     def __init__(self, mode= 'all'):
+        '''
+        Initializes the class attributes.
+        '''
         # Initialize the lists for holding the logs, losses and metrics
         self.losses = []
         self.accuracy = []
         self.f1score = []
         self.precision = []
         self.recall = []
-        self.logs = []
         self.mode = mode
         self.metric_mode = []
 
@@ -17,6 +29,8 @@ class Visualizer():
     def on_epoch_end(self, logs={}):
         """
         Calculates and plots Precision, Recall, F1 score
+        Arguments:
+            logs: Dictionary consists of the metric mode name as dictionary key and its values as dictionary values. The dictionary also have special entry for the loss with the string "loss" as dictionary entry key and the value of the loss at the given epoch as dictionary entry value.
         """
         # Extract from the log
         if self.mode == "all":
