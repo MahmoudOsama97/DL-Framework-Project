@@ -1,21 +1,45 @@
+import numpy as np
+from texttable import Texttable
 class model():
+    '''
+    Class encapsulates the model with its layers.
+    Attributes:
+      layers: List of objects that inherits from the Layer class. 
+    '''
 
     def __init__(self):
+        '''
+        Initializes the layers attribute to an empty list.
+        '''
         self.layers = []
         
 
-    def normalization(self,Arr):
+    def normalization(self, Arr):
+      '''
+      Normalizes (subtracts the mean and divides by the standard deviation) some input array.
+      Arguments:
+        Arr: Input array to be normalized.
+      Returns:
+        Normalized array of inputs.
+      '''
       epsilon=0.0000001
       arr=0 
       arr = Arr - Arr.mean(axis=0)
       arr = arr / (np.abs(arr).max(axis=0)+epsilon)
       return arr
 
-    def add(self,Layer):
+    def add(self, Layer):
+      '''
+      Adds specific layer to the model
+      Arguments:
+        Layer: Some object inherits from Layer class (Conv, Dense or Pool) 
+      '''
       self.layers.append(Layer)  
 
     def summary(self):
-      # Initializing a table
+      '''
+      Prints a table summerizes the main info of the model like: Layers, number of parameters, etc.
+      '''
       sum=0
       table = Texttable()
       table.header(["Layer", "filters size", "number of filters", "pad", "stride", "number of paramters"])
@@ -38,9 +62,18 @@ class model():
       table.add_row(["Total", "-","-" ,"-","-",sum])
       print(table.draw())
 
-    def evaluate(self, x_test , y_test, loss_type="categorical_crossentropy", batchsize=1,metrics="accuracy"):
+    def evaluate(self, x_test, y_test, loss_type="categorical_crossentropy", batchsize=1, metrics="accuracy"):
+          '''
+          Performs the test phase and shows the confusion matrix.
+          Arguments: 
+            x_test: The test inputs array.
+            y_test: The test labels array.
+            loss_type: String indicates the loss required to evaluate against.
+            batch_size: Integer indicates the number of examples forwarded as a batch.
+            metrics: String indicates the required evaluation metric.
+          '''
           lossobj=Loss(loss_type)
-          evaluationobj=Evaluation_metrics(metrics,max(y_test),plot)
+          evaluationobj=Evaluation_metrics(metrics,max(y_test), plot = 1)
           output_layer=[]
           forward_outputs=[]
           test_predection=[]
@@ -77,7 +110,19 @@ class model():
           else :
             evaluationobj.all_evaluation(forward_outputs,y_test[0:samples])  
 
-    def fit(self, x_train, y_train, loss_type="categorical_crossentropy" ,epochs=0, validation_split=0.1,batchsize=1,plot=1,metrics="accuracy"):
+    def fit(self, x_train, y_train, loss_type="categorical_crossentropy", epochs=0, validation_split=0.1, batchsize=1, plot=1, metrics="accuracy"):
+        '''
+        Trains the model on the training set and validates against locally synthesized validation set.
+        Arguments:
+          x_train: The training inputs array.
+          y_train: The training labels array.
+          loss_type: String indicates the loss required to evaluate against.
+          epochs: Integer indicates the number of iterations on the whole training set
+          validation_split:float represents the ratio by which the mnist training files are split into validation and training sets. The validation_split equals the required portion of validation set of the total given training set.
+          batchsize: Integer indicates the number of training examples after which the learning parameters are updated
+          plot: If 1, the curves of loss and the required evaluation metrics versus epoch number are plotted.
+          metrics: String represents the required meteric to be plotted against the epoch number. If 'all', all evaluation metrics are plotted.
+        '''
         lossobj=Loss(loss_type)
         evaluationobj=Evaluation_metrics(metrics,max(y_train),plot)
         Visualizerobj=Visualizer(metrics)

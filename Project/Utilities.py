@@ -8,9 +8,9 @@ class Storage():
         '''
         This method saves the passed model into the passed path with the passed name.
         Attributes:
-        model: Object of type model representing the current state of the model you want to save.
-        file_name: Beautiful name of your choice for the file to be pickled. If you want to save many models, then every model MUST have a unique name. If an already exists file name passed, then the saved old model will be lost.
-        save_path: The file path you want to save your model in. 
+            model: Object of type model representing the current state of the model you want to save.
+            file_name: Beautiful name of your choice for the file to be pickled. If you want to save many models, then every model MUST have a unique name. If an already exists file name passed, then the saved old model will be lost.
+            save_path: The file path you want to save your model in. 
         '''
         file_path = os.path.join(save_path, file_name + ".pickle")
         if os.path.exists(file_path):
@@ -22,8 +22,8 @@ class Storage():
         '''
         This method loads a model from the passed path with the passed name.
         Attributes:
-        file_name: Name of the file you saved your model in. If there is not a .pickle file with the same name, the methods returns None.
-        save_path: The file path you want to load your model from.
+            file_name: Name of the file you saved your model in. If there is not a .pickle file with the same name, the methods returns None.
+            save_path: The file path you want to load your model from.
         '''
         file_path = os.path.join(load_path, file_name + ".pickle")
         if not os.path.exists(file_path):
