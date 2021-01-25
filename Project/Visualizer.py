@@ -1,6 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from IPython.display import clear_output
 class Visualizer():
     
     # This function is called when the training begins
@@ -14,6 +11,7 @@ class Visualizer():
         self.logs = []
         self.mode = mode
         self.metric_mode = []
+
 
     # This function is called at the end of each epoch
     def on_epoch_end(self, logs={}):
@@ -37,24 +35,27 @@ class Visualizer():
         self.losses.append(loss)
     
         # Clear the previous plot
-        clear_output(wait=True)
-        N = np.arange(0, len(self.losses))
+        if logs['type']=="train":
+          clear_output(wait=True)
+        N = np.arange(1, len(self.losses)+1)
         
         # You can chose the style of your preference
+
         plt.style.use("seaborn")
         plt.figure(figsize=(20,4))
         # Plot train loss, train acc, val loss and val acc against epochs passed
-        plt.title("Loss over epoch")
+        plt.title("{} Loss over epoch number {}".format(logs['type'],len(self.losses)))
         plt.ylabel("Loss")
-        plt.plot(N, self.losses)
+        plt.plot(N, self.losses,c='blue', marker='o', linestyle='solid')
+
 
         if (self.mode == "all"):
             fig, ax = plt.subplots(1,4, figsize=(20,4))
             ax = ax.ravel()
-            ax[0].plot(N, self.precision, label = "Precision", c = 'red')
-            ax[1].plot(N, self.recall, label = "Recall", c = 'red')
-            ax[2].plot(N, self.f1score, label = "F1 score", c = 'red')
-            ax[3].plot(N, self.accuracy, label = "Precision", c = 'red')
+            ax[0].plot(N, self.precision, label = "Precision", c = 'red', marker='o', linestyle='solid')
+            ax[1].plot(N, self.recall, label = "Recall", c = 'red', marker='o', linestyle='solid')
+            ax[2].plot(N, self.f1score, label = "F1 score", c = 'red', marker='o', linestyle='solid')
+            ax[3].plot(N, self.accuracy, label = "Precision", c = 'red', marker='o', linestyle='solid')
             ax[0].set_title("Precision at Epoch No. {}".format(len(self.losses)))
             ax[1].set_title("Recall at Epoch No. {}".format(len(self.losses)))
             ax[2].set_title("F1-score at Epoch No. {}".format(len(self.losses)))
@@ -73,7 +74,7 @@ class Visualizer():
             ax[3].set_ylim(0,1)
         else:
             fig, ax = plt.subplots(1,1, figsize=(12,4))
-            ax.plot(N, self.metric_mode, label = self.mode, c = 'red')
+            ax.plot(N, self.metric_mode, label = self.mode, c = 'red', marker='o', linestyle='solid')
             ax.set_title("{} at Epoch No. {}".format(self.mode, len(self.losses)))
             ax.set_xlabel("Epoch #")
             ax.set_ylabel(self.mode)
